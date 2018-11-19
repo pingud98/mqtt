@@ -1,12 +1,10 @@
 from time import gmtime, strftime
 import paho.mqtt.client as mqtt
 import sqlite3
+import json
 
-temperature_topic = "temperature"
-humidity_topic = "humidity"
-dbFile = "data.db"
-
-dataTuple = [-1,-1]
+cosmicpi_topic = "cosmicpi/#"
+dbFile = "cosmicdata.db"
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -14,8 +12,7 @@ def on_connect(client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.subscribe(temperature_topic)
-    client.subscribe(humidity_topic)
+    client.subscribe(cosmicpi_topic)
     
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
@@ -23,7 +20,7 @@ def on_message(client, userdata, msg):
 
     result = (theTime + "\t" + str(msg.payload))
     print(msg.topic + ":\t" + result)
-    if (msg.topic == temperature_topic):
+    if (msg.topic == cosmpicpi_topic):
         dataTuple[0] = str(msg.payload)
     if (msg.topic == humidity_topic):
         dataTuple[1] = str(msg.payload)
@@ -36,7 +33,7 @@ def writeToDb(theTime, temperature, humidity):
     conn = sqlite3.connect(dbFile)
     c = conn.cursor()
     print "Writing to db..."
-    c.execute("INSERT INTO climate VALUES (?,?,?)", (theTime, temperature, humidity))
+    c.execute("INSERT INTO cosmicdata VALUES (?,?,?)", (theTime, temperature, humidity))
     conn.commit()
 
     global dataTuple
@@ -46,7 +43,7 @@ client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
 
-client.connect("raspberrypi", 1883, 60)
+client.connect("cosmicpidata.mooo.com", 1883, 60)
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
